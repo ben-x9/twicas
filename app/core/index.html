@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- The first thing in any HTML file should be the charset -->
+    <meta charset="utf-8">
+
+    <!-- Make the page mobile compatible -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Load popular libs from a shared CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsondiffpatch/0.2.4/jsondiffpatch.min.js"></script>
+    <script src="https://use.fontawesome.com/e43f51e4f5.js"></script>
+    <title>Supercast</title>
+  </head>
+  <body>
+    <!-- Display a message if JS has been disabled on the browser. -->
+    <noscript>If you're seeing this message, that means <strong>JavaScript has been disabled on your browser</strong>, please <strong>enable JS</strong> to make this app work.</noscript>
+
+    <!-- The app hooks into this div -->
+    <div id="root"></div>
+
+    <!-- Initialize Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+    <script>
+      var config = {
+        apiKey: "AIzaSyDziIwHiQDaT5g3QHdLSqoX2hmAOYudFqk",
+        authDomain: "flashcards-37c4a.firebaseapp.com",
+        databaseURL: "https://flashcards-37c4a.firebaseio.com",
+        storageBucket: "flashcards-37c4a.appspot.com",
+        messagingSenderId: "734000622431"
+      };
+      firebase.initializeApp(config);
+    </script>
+
+    <script src='/bundle.js'></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+build
+node_modules
+twicas-secret.json
+
+# Cruft
+.DS_Store
+npm-debug.log
+firebase-debug.log
+.idea
+.tmp

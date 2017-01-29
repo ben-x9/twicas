@@ -1,0 +1,16 @@
+{
+  "editor.tabSize": 2,
+  "editor.wordWrap": true,
+  "editor.wrappingColumn": 80,
+  "editor.rulers": [80],
+  "editor.wrappingIndent": "indent",
+  "editor.renderWhitespace": "boundary",
+  "files.trimTrailingWhitespace": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/build": true,
+    "**/types": true
+  },
+  "editor.scrollBeyondLastLine": false
+}
