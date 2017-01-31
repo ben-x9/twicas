@@ -1,5 +1,6 @@
 import * as xhr from 'xhr';
 import { map, snakeCase, camelCase, mapKeys, mapValues } from 'lodash';
+import { User } from 'store/user';
 
 const baseUrl = 'https://v20ki0pxd7.execute-api.us-west-2.amazonaws.com/supercast/';
 
@@ -15,7 +16,7 @@ const global = window as Global;
 
 type Data = {[key: string]: primitive};
 
-type Callback = (error: Error, data: any) => void;
+type Callback<T> = (error: Error, data: T) => void;
 
 const queryString = (vals: Data) =>
   map(vals, (val, param) => `${snakeCase(param)}=${val}`).join('&');
@@ -33,7 +34,7 @@ const camelizeKeysDeep = (data: any): any =>
 const url = (path: string, queryVals?: {[param: string]: string}) =>
   baseUrl + path + (queryVals ? ('?' + queryString(queryVals)) : '');
 
-export const authUrl = url('oauth2/authorize', {
+const authUrl = url('oauth2/authorize', {
   clientId,
   responseType: 'code',
 });
@@ -46,27 +47,14 @@ export const fetchAccessToken = (code: string, callback: () => void) => {
     clientSecret,
     redirectUri,
   }, (err, data) => {
-    setAccessToken(data['accessToken'] as string);
+    const token = data['accessToken'] as string;
+    global.accessToken = token;
+    localStorage.setItem('accessToken', token);
     callback();
   });
 };
 
-function setAccessToken(token: string) {
-  global.accessToken = token;
-  localStorage.setItem('accessToken', token);
-}
-
-export function loadAccessToken(callback: () => void) {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    global.accessToken = token;
-    return false;
-  }
-  callback();
-  return true;
-}
-
-const post = (uri: string, args: Data, callback: Callback) =>
+const post = (uri: string, args: Data, callback: Callback<any>) =>
   xhr.post({
     url: url(uri),
     headers: {'Content-type': 'application/x-www-form-urlencoded'},
@@ -74,7 +62,15 @@ const post = (uri: string, args: Data, callback: Callback) =>
     responseType: 'json',
   }, (err, resp) => callback(err, camelizeKeysDeep(resp.body)));
 
-const get = (uri: string, args: Data, callback: Callback) => {
+const get = (uri: string, args: Data, callback: Callback<any>) => {
+  if (!global.accessToken) {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      global.accessToken = token;
+    } else {
+      window.location.replace(authUrl);
+    }
+  }
   const query = queryString(args);
   xhr.get({
     url: url(uri) + (query ? '?' + query : ''),
@@ -90,14 +86,19 @@ const get = (uri: string, args: Data, callback: Callback) => {
    });
 };
 
-export function getUserData(id: string, callback: Callback) {
+export function getUserData(id: string, callback: Callback<any>) {
   get(`users/${id}`, {}, callback);
 }
 
-export function getComments(id: string, callback: Callback) {
+export function getComments(id: string, callback: Callback<any>) {
   get(`movies/${id}/comments?offset=0&limit=10`, {}, callback);
 }
 
-export function getCurrentLive(id: string, callback: Callback) {
+export function getCurrentLive(id: string, callback: Callback<any>) {
   get(`users/${id}/current_live`, {}, callback);
+}
+
+export function getCurrentUser(callback: Callback<User>) {
+  get(`verify_credentials`, {}, (err: Error, data: any) =>
+    callback(err, data.user as User));
 }

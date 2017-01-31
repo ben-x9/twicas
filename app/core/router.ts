@@ -8,6 +8,8 @@ interface Route {
   key: string;
 }
 
+export type Path<Data extends Object> = (data: Data) => string;
+
 export function reset() {
   routes.length = 0;
 }

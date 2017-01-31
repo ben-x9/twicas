@@ -12,4 +12,4 @@ export interface RefreshView {
   type: 'REFRESH_VIEW';
 }
 
-export type Effect = null | Goto | Redirect | RefreshView;
+export type Action = Goto | Redirect | RefreshView;

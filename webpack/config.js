@@ -4,7 +4,7 @@ var webpack = require('webpack');
 module.exports = {
 
   entry: {
-    index: ['./app/core/start'],
+    index: ['./app/core'],
   },
   output: {
     publicPath: '/',

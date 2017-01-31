@@ -1,17 +1,13 @@
 import { div } from 'core/html';
 import { Update } from 'core/common';
-import { Redirect } from 'core/effects';
+import { Action } from 'actions';
 import { style } from 'typestyle';
-import { vertical, verticallySpaced, center, content, margin } from 'csstips';
+import { vertical, verticallySpaced, center, content, padding } from 'csstips';
 import button from 'components/button';
-import { authUrl } from 'twit';
-
-export type Action = Redirect;
-
-export const update = (action: Action) => action;
+import { userPath } from 'root';
 
 export const view = (update: Update<Action>) =>
-  div(style(margin(10), vertical, verticallySpaced(10), center), [
+  div(style(padding(10), vertical, verticallySpaced(10), center), [
     div(style(content), 'hello world!'),
-    button('start!', () => update({type: 'REDIRECT', url: authUrl})),
+    button('start!', () => update({type: 'GOTO', path: userPath()})),
   ]);

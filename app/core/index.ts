@@ -24,17 +24,22 @@ if (module.hot) {
 }
 
 import * as Root from 'root';
-import { defer } from 'lodash';
+import { defer, debounce } from 'lodash';
+import * as Actions from 'actions';
+import { omit } from 'lodash';
 
 interface Global extends Window {
   // expose the model and state globally so we can view in the console
-  store: Root.Store;
+  data: Root.Store;
   state: Root.State;
   // make view a global because cannot `x = x || y` when x is a local
   view: VNode | HTMLElement;
+  loaded: Boolean;
+  scrollTop: ByKey<number>;
 }
 const global = window as Global;
 global.view = global.view || document.getElementById('root') as HTMLElement;
+global.scrollTop = global.scrollTop || {};
 
 import * as csstips from 'csstips';
 csstips.normalize();
@@ -54,56 +59,55 @@ type Action = Root.Action | GoBack;
 import { create } from 'jsondiffpatch';
 const json = create();
 
-// import * as Mock from 'mock-data';
-
-if (!global.store) global.store = Root.newStore;
-if (!global.state) global.state = Root.newState;
+if (!global.data) global.data = Root.store;
+if (!global.state) global.state = Root.state;
 
 function update(action: Action) {
-  const [newStore, newState, effect] =
+  const [newData, newState, reaction] =
     action.type === 'POP' ?
-      [ global.store,
+      [ global.data,
         /*json.diff(state, action.state) ? action.state :*/ global.state,
         null] :
-      Root.update(global.store, global.state, action);
+      Root.update(global.data, global.state, action);
+  applyUpdate(action, newData, newState, reaction);
+}
+
+function applyUpdate(action: Action, newData: Root.Store, newState: Root.State, reaction: Actions.Action|null) {
   if (process.env.NODE_ENV === 'development')
-    logAction(action, newStore, newState, effect);
-  const shouldRefresh = newStore !== global.store || newState !== global.state;
+    logAction(action, newData, newState, reaction);
+  const shouldRefresh = newData !== global.data || newState !== global.state;
   if (action.type !== 'POP' && newState !== global.state)
     history.replace(history.location.pathname, newState);
-  global.store = newStore;
+  global.data = newData;
   global.state = newState;
-  // if (process.env.NODE_ENV === 'development') {
-  //   global.store = store;
-  //   global.state = state;
-  // }
-  if (effect) {
-    doEffect(effect);
+  if (reaction) {
+    perform(reaction);
   } else if (shouldRefresh || action.type === 'POP') {
     refreshView();
   }
 }
 
-function doEffect(effect: Effect) {
-  if (!effect) return;
-  switch (effect.type) {
+function perform(action: Actions.Action) {
+  if (!action) return;
+  switch (action.type) {
     case 'GOTO':
-      history.push(effect.path, global.state);
+      history.push(action.path, global.state);
       refreshView();
       break;
     case 'REDIRECT':
-      window.location.replace(effect.url);
+      window.location.replace(action.url);
       break;
     case 'REFRESH_VIEW':
       refreshView();
       break;
+    default:
+      Actions.perform(action, global.data, global.state,
+        (newData, newState, nextAction) =>
+          applyUpdate(action, newData, newState, nextAction));
   }
 }
 
-import { Effect } from 'core/effects';
-import { omit } from 'lodash';
-
-function logAction(action: Action, store: Root.Store, state: Root.State, effect: Effect) {
+function logAction(action: Action, data: Root.Store, state: Root.State, reaction: Actions.Action|null) {
   let actionPath = action.type;
   let actualAction: any = action;
   while (actualAction.action) {
@@ -112,12 +116,12 @@ function logAction(action: Action, store: Root.Store, state: Root.State, effect:
   }
   actionPath += ' ' + JSON.stringify(omit(actualAction, 'type'));
   let msg = actionPath;
-  if (store !== global.store)
-    msg += '\n-> store ' + JSON.stringify(json.diff(global.store, store));
+  if (data !== global.data)
+    msg += '\n-> data ' + JSON.stringify(json.diff(global.data, data));
   if (state !== global.state)
     msg += '\n-> state ' + JSON.stringify(json.diff(global.state, state));
-  if (effect)
-    msg += '\n-> effect ' + JSON.stringify(effect);
+  if (reaction)
+    msg += '\n-> reaction ' + JSON.stringify(reaction);
   console.log(msg);
 }
 
@@ -132,7 +136,37 @@ unlisten = history.listen((location, action) => {
   }
 });
 
+import { set } from 'core/common';
+import { match } from 'core/router';
+
 function refreshView() {
-  global.view = patch(global.view,
-    h('div#root', Root.view(global.store, global.state, history.location.pathname, update)));
+  let view = Root.view(
+    global.data,
+    global.state,
+    history.location.pathname,
+    update,
+  );
+  const key = match(history.location.pathname).key as string;
+  view = set(view, {
+    data: set(view.data || {}, {
+      hook: set((view.data || {}).hook || {}, {
+        insert: () => {
+          window.scrollTo(0, global.scrollTop[key] || 0);
+          window.onscroll = debounce(() =>
+            global.scrollTop[key] = window.scrollY, 100);
+        },
+        update: () =>
+          defer(() => window.scrollTo(0, global.scrollTop[key] || 0)),
+      }),
+    }),
+  });
+  global.view = patch(global.view, h('div#root', view));
 }
+
+// if (!global.loaded) {
+//   Root.load(global.store, (store: Root.Store) => {
+//     global.store = store;
+//     refreshView();
+//   });
+//   global.loaded = true;
+// }
