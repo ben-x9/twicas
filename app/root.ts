@@ -6,7 +6,7 @@ import * as Home from 'pages/home';
 import * as UserPage from 'pages/user';
 import { User } from 'store/user';
 import { lightGray } from 'colors';
-import wait from 'pages/wait';
+import loading from 'pages/loading';
 import * as api from 'api';
 
 if (module.hot) module.hot.dispose(() => {
@@ -51,7 +51,7 @@ export function view(store: Store, state: State, path: string, update: Update<Ac
     case 'TWIT_AUTH':
       const code = readParam('code');
       api.fetchAccessToken(code, () => update({type: 'REFRESH_VIEW'}));
-      return wait();
+      return loading();
     case 'USER':
       return UserPage.view(store.user, update);
     default: return NotFound.view();

@@ -6,30 +6,32 @@ interface Name {
   name: string;
 }
 
+type Children = VNode | Array<string | VNode>;
+
 interface HyperScriptFunc {
   (name: Name, className: string | string[], data: VNodeData): VNode;
   (name: Name, className: string | string[], text: string): VNode;
-  (name: Name, className: string | string[], children: VNode | Array<VNode>): VNode;
+  (name: Name, className: string | string[], children: Children): VNode;
   (name: Name, className: string | string[], data: VNodeData, text: string): VNode;
-  (name: Name, className: string | string[], data: VNodeData, children: VNode | Array<VNode>): VNode;
+  (name: Name, className: string | string[], data: VNodeData, children: Children): VNode;
 
   (name: Name, data: VNodeData): VNode;
   (name: Name, text: string): VNode;
-  (name: Name, children: VNode | Array<VNode>): VNode;
+  (name: Name, children: Children): VNode;
   (name: Name, data: VNodeData, text: string): VNode;
-  (name: Name, data: VNodeData, children: VNode | Array<VNode>): VNode;
+  (name: Name, data: VNodeData, children: Children): VNode;
 
   (className: string | string[], data: VNodeData): VNode;
   (className: string | string[], text: string): VNode;
-  (className: string | string[], children: VNode | Array<VNode>): VNode;
+  (className: string | string[], children: Children): VNode;
   (className: string | string[], data: VNodeData, text: string): VNode;
-  (className: string | string[], data: VNodeData, children: VNode | Array<VNode>): VNode;
+  (className: string | string[], data: VNodeData, children: Children): VNode;
 
   (data: VNodeData): VNode;
   (text: string): VNode;
-  (children: VNode | Array<VNode>): VNode;
+  (children: Children): VNode;
   (data: VNodeData, text: string): VNode;
-  (data: VNodeData, children: VNode | Array<VNode>): VNode;
+  (data: VNodeData, children: Children): VNode;
 }
 
 type A = VNodeData | string | Array<VNode>;
@@ -63,3 +65,15 @@ export const tag = (type: string): HyperScriptFunc =>
 
 export const div = tag('div');
 export const input = tag('input');
+export const img = tag('img');
+export const h1 = tag('h1');
+export const span = tag('span');
+
+const svgTag = (type: string) => {
+  const t = tag(type);
+  return (attrs: any, children?: string | VNode[]) => children ? t({attrs}, children as string) : t({attrs});
+};
+
+export const svg = svgTag('svg');
+export const polygon = svgTag('polygon');
+export const text = svgTag('text');
