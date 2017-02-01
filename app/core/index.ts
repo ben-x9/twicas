@@ -30,7 +30,7 @@ import { omit } from 'lodash';
 
 interface Global extends Window {
   // expose the model and state globally so we can view in the console
-  data: Root.Store;
+  store: Root.Store;
   state: Root.State;
   // make view a global because cannot `x = x || y` when x is a local
   view: VNode | HTMLElement;
@@ -59,26 +59,26 @@ type Action = Root.Action | GoBack;
 import { create } from 'jsondiffpatch';
 const json = create();
 
-if (!global.data) global.data = Root.store;
+if (!global.store) global.store = Root.store;
 if (!global.state) global.state = Root.state;
 
 function update(action: Action) {
   const [newData, newState, reaction] =
     action.type === 'POP' ?
-      [ global.data,
+      [ global.store,
         /*json.diff(state, action.state) ? action.state :*/ global.state,
         null] :
-      Root.update(global.data, global.state, action);
+      Root.update(action, global.store, global.state);
   applyUpdate(action, newData, newState, reaction);
 }
 
 function applyUpdate(action: Action, newData: Root.Store, newState: Root.State, reaction: Actions.Action|null) {
   if (process.env.NODE_ENV === 'development')
     logAction(action, newData, newState, reaction);
-  const shouldRefresh = newData !== global.data || newState !== global.state;
+  const shouldRefresh = newData !== global.store || newState !== global.state;
   if (action.type !== 'POP' && newState !== global.state)
     history.replace(history.location.pathname, newState);
-  global.data = newData;
+  global.store = newData;
   global.state = newState;
   if (reaction) {
     perform(reaction);
@@ -101,13 +101,13 @@ function perform(action: Actions.Action) {
       refreshView();
       break;
     default:
-      Actions.perform(action, global.data, global.state,
+      Actions.perform(action, global.store, global.state,
         (newData, newState, nextAction) =>
           applyUpdate(action, newData, newState, nextAction));
   }
 }
 
-function logAction(action: Action, data: Root.Store, state: Root.State, reaction: Actions.Action|null) {
+function logAction(action: Action, store: Root.Store, state: Root.State, reaction: Actions.Action|null) {
   let actionPath = action.type;
   let actualAction: any = action;
   while (actualAction.action) {
@@ -116,8 +116,9 @@ function logAction(action: Action, data: Root.Store, state: Root.State, reaction
   }
   actionPath += ' ' + JSON.stringify(omit(actualAction, 'type'));
   let msg = actionPath;
-  if (data !== global.data)
-    msg += '\n-> data ' + JSON.stringify(json.diff(global.data, data));
+  if (store !== global.store)
+    msg += '\n-> store ' +
+      (JSON.stringify(json.diff(global.store, store)) || '(unchanged)');
   if (state !== global.state)
     msg += '\n-> state ' + JSON.stringify(json.diff(global.state, state));
   if (reaction)
@@ -141,7 +142,7 @@ import { match } from 'core/router';
 
 function refreshView() {
   let view = Root.view(
-    global.data,
+    global.store,
     global.state,
     history.location.pathname,
     update,
@@ -162,11 +163,3 @@ function refreshView() {
   });
   global.view = patch(global.view, h('div#root', view));
 }
-
-// if (!global.loaded) {
-//   Root.load(global.store, (store: Root.Store) => {
-//     global.store = store;
-//     refreshView();
-//   });
-//   global.loaded = true;
-// }

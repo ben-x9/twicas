@@ -2,6 +2,9 @@ import { h } from 'snabbdom';
 import { VNode, VNodeData } from 'snabbdom/vnode';
 import { isObject, set } from 'core/common';
 
+export type VNode = VNode;
+export type VNodeData = VNodeData;
+
 interface Name {
   name: string;
 }

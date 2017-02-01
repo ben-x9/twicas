@@ -1,4 +1,5 @@
 export const newUser = {
+  id: '',
   name: '',
   profile: '',
   image: '',

@@ -1,6 +1,7 @@
 import * as xhr from 'xhr';
 import { map, snakeCase, camelCase, mapKeys, mapValues } from 'lodash';
 import { User } from 'store/user';
+import { Comment } from 'store/comment';
 
 const baseUrl = 'https://v20ki0pxd7.execute-api.us-west-2.amazonaws.com/supercast/';
 
@@ -16,7 +17,7 @@ const global = window as Global;
 
 type Data = {[key: string]: primitive};
 
-type Callback<T> = (error: Error, data: T) => void;
+type Callback<T> = (error: Error|null, data: T) => void;
 
 const queryString = (vals: Data) =>
   map(vals, (val, param) => `${snakeCase(param)}=${val}`).join('&');
@@ -86,16 +87,21 @@ const get = (uri: string, args: Data, callback: Callback<any>) => {
    });
 };
 
-export function getUserData(id: string, callback: Callback<any>) {
+export function getUser(id: string, callback: Callback<User>) {
   get(`users/${id}`, {}, callback);
 }
 
-export function getComments(id: string, callback: Callback<any>) {
-  get(`movies/${id}/comments?offset=0&limit=10`, {}, callback);
+export function getComments(movieId: string, callback: Callback<ReadonlyArray<Comment>>) {
+  get(`movies/${movieId}/comments?offset=0&limit=10`, {},
+    (err: Error, data: any) => !err && callback(null, data.comments),
+  );
 }
 
-export function getCurrentLive(id: string, callback: Callback<any>) {
-  get(`users/${id}/current_live`, {}, callback);
+export function getCurrentLiveId(userId: string, callback: Callback<string>) {
+  get(`users/${userId}/current_live`, {}, (err: Error, data: any) =>
+    data.error ?
+      callback(new Error('that user is not live'), '') :
+      callback(null, data.movie.id));
 }
 
 export function getCurrentUser(callback: Callback<User>) {

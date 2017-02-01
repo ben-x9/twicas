@@ -38,7 +38,7 @@ export function delIndex<T>(array: ReadonlyArray<T>, index: number): ReadonlyArr
 
 export const isObject = (x: any) => typeof x === 'object' && !Array.isArray(x);
 
-export function stop<T>(a: T): T {
+export function stop<T>(data: T): T {
   debugger;
-  return a;
+  return data;
 }

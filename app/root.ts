@@ -1,10 +1,12 @@
 import { path, match, reset, readParam, Path } from 'core/router';
-import { Action } from 'actions';
-import { Update } from 'core/common';
+import { Action as GlobalAction } from 'actions';
+import { Update, set } from 'core/common';
 import * as NotFound from 'pages/not-found';
-import * as Home from 'pages/home';
+import * as HomePage from 'pages/home';
 import * as UserPage from 'pages/user';
+import * as CommentsPage from 'pages/comments';
 import { User } from 'store/user';
+import { Comment } from 'store/comment';
 import { lightGray } from 'colors';
 import loading from 'pages/loading';
 import * as api from 'api';
@@ -18,42 +20,64 @@ if (module.hot) module.hot.dispose(() => {
 
 export const store = {
   user: null as User | null,
+  comments: [] as ReadonlyArray<Comment>,
 };
 export type Store = Readonly<typeof store>;
 
 export const state = {
+  homePage: HomePage.state,
 };
 export type State = Readonly<typeof state>;
 
 // UPDATE
 
-export type Action = Action;
+export interface HomePageAction {
+  type: 'HOME_PAGE';
+  action: HomePage.Action;
+}
 
-export function update(data: Store, state: State, action: Action): [Store, State, Action|null] {
-  return [data, state, action];
+export type Action = GlobalAction | HomePageAction;
+
+export function update(action: Action, store: Store, state: State): [Store, State, GlobalAction|null] {
+  let newStore = store;
+  let newState = state;
+  let reaction = null as null|GlobalAction;
+  switch (action.type) {
+    case 'HOME_PAGE':
+      let newHomePageState: HomePage.State;
+      [newHomePageState, reaction] = HomePage.update(action.action, state.homePage);
+      newState = set(state, {homePage: newHomePageState});
+      break;
+    default:
+      reaction = action;
+      break;
+  }
+  return [newStore, newState, reaction];
 };
 
 // VIEW
-
-document.body.style.backgroundColor = lightGray;
 
 export const homePath = path('/', 'HOME');
 export const twitAuthPath = path('/twit_auth', 'TWIT_AUTH');
 export const userPath = path('/user', 'USER');
 
-export const commentsPath = path('/comments/:id', 'COMMENTS');
+export const commentsPath: Path<{userId: string}> =
+  path('/:userId', 'COMMENTS');
 
 export function view(store: Store, state: State, path: string, update: Update<Action>) {
   const route = match(path);
   switch (route.key) {
     case 'HOME':
-      return Home.view(update);
+      return HomePage.view(state.homePage, (action: HomePage.Action) =>
+        update({type: 'HOME_PAGE', action}));
     case 'TWIT_AUTH':
       const code = readParam('code');
       api.fetchAccessToken(code, () => update({type: 'REFRESH_VIEW'}));
       return loading();
     case 'USER':
       return UserPage.view(store.user, update);
+    case 'COMMENTS':
+      return CommentsPage.view(route.args[0], store, update);
     default: return NotFound.view();
   }
 }
