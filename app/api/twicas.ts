@@ -2,30 +2,24 @@ import * as xhr from 'xhr';
 import { map, snakeCase, camelCase, mapKeys, mapValues } from 'lodash';
 import { User } from 'store/user';
 import { Comment } from 'store/comment';
-import { Store, State } from 'root';
-import { stop } from 'core/common';
+import { Callback, ActionCallback, action } from 'core/api';
 
 const baseUrl = 'https://v20ki0pxd7.execute-api.us-west-2.amazonaws.com/supercast/';
 
 const unproxiedBaseUrl = 'https://apiv2.twitcasting.tv/';
 
 const clientId = 'i3233014286.94718e949c391fb9609da6976d691d2f5e650b9d478118927bea896b7c695ebc';
-const clientSecret = require('../twicas-secret.json');
+const clientSecret = require('../../twicas-secret.json');
 
 const redirectUri = 'http://localhost:8080/twit_auth';
 
 interface Global extends Window {
   accessToken: string;
-  // ensure callbacks always access the latest data
-  store: Store;
-  state: State;
 }
 const global = window as Global;
 
 type Data = {[key: string]: primitive};
 
-type Callback<T> = (error: Error|null, data: T) => void;
-type ActionCallback<T> = (error: Error|null, store: Store, state: State, data: T) => void;
 
 const queryString = (vals: Data) =>
   map(vals, (val, param) => `${snakeCase(param)}=${val}`).join('&');
@@ -95,11 +89,6 @@ const get = (uri: string, args: Data, callback: Callback<any>) => {
      if (err) throw err;
      callback(err, camelizeKeysDeep(resp.body));
    });
-};
-
-
-function action<T>(callback: ActionCallback<T>, err: Error | null, data: T) {
-  callback(err, global.store, global.state, data);
 };
 
 export function getUser(id: string, callback: ActionCallback<User>) {

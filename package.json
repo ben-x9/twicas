@@ -1,7 +1,7 @@
 {
-  "name": "flashcards",
+  "name": "twicas",
   "version": "0.0.1",
-  "description": "a flashcard app for language learning",
+  "description": "an experiment with the twicas api",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=development && webpack-dev-server --config webpack/config.js --content-base app/core --history-api-fallback --progress --inline --hot --debug --devtool cheap-module-eval-source-map --output-pathinfo",
@@ -40,6 +40,7 @@
     "lodash": "^4.17.4",
     "path-to-regexp": "^1.7.0",
     "snabbdom": "^0.6.3",
+    "snabbdom-virtualize": "^0.6.0",
     "textfit": "^2.3.1",
     "typestyle": "^0.22.1",
     "urlencode": "^1.1.0",

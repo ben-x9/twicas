@@ -7,10 +7,10 @@ import button from 'components/button';
 import { commentsPage } from 'root';
 import * as colors from 'colors';
 
-export const state = {
+export const initialState = {
   input: '',
 };
-export type State = Readonly<typeof state>;
+export type State = Readonly<typeof initialState>;
 
 export interface SetInput {
   type: 'SET_INPUT';

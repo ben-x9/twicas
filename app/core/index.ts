@@ -105,9 +105,11 @@ function perform(action: Actions.Action) {
       refreshView();
       break;
     default:
-      Actions.perform(action, global.store, global.state,
-        (newData, newState, nextAction) =>
-          applyUpdate(action, newData, newState, nextAction));
+      if (Actions.perform(action, global.store, global.state,
+          (newData, newState, nextAction) =>
+            applyUpdate(action, newData, newState, nextAction)))
+        refreshView();
+      break;
   }
 }
 

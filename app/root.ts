@@ -8,7 +8,8 @@ import * as CommentsPage from 'pages/comments';
 import { User } from 'store/user';
 import { Comment } from 'store/comment';
 import loading from 'pages/loading';
-import * as api from 'api';
+import * as twicas from 'api/twicas';
+import { VNode } from 'core/html';
 
 if (module.hot) module.hot.dispose(() => {
   reset();
@@ -19,6 +20,7 @@ if (module.hot) module.hot.dispose(() => {
 export const initialStore = {
   user: null as User | null,
   comments: [] as ReadonlyArray<Comment>,
+  explanations: {} as ByKey<ReadonlyArray<VNode>>,
 };
 export type Store = Readonly<typeof initialStore>;
 
@@ -29,7 +31,8 @@ export const initialErrors = {
 
 export const initialState = {
   errors: initialErrors,
-  homePage: HomePage.state,
+  homePage: HomePage.initialState,
+  commentsPage: CommentsPage.initialState,
 };
 export type State = Readonly<typeof initialState>;
 export type Errors = Readonly<typeof initialErrors>;
@@ -41,7 +44,12 @@ export interface HomePageAction {
   action: HomePage.Action;
 }
 
-export type Action = GlobalAction | HomePageAction;
+export interface CommentsPageAction {
+  type: 'COMMENTS_PAGE';
+  action: CommentsPage.Action;
+}
+
+export type Action = GlobalAction | HomePageAction | CommentsPageAction;
 
 export function update(action: Action, store: Store, state: State): [Store, State, GlobalAction|null] {
   let newStore = store;
@@ -52,6 +60,11 @@ export function update(action: Action, store: Store, state: State): [Store, Stat
       let newHomePageState: HomePage.State;
       [newHomePageState, reaction] = HomePage.update(action.action, state.homePage);
       newState = set(state, {homePage: newHomePageState});
+      break;
+    case 'COMMENTS_PAGE':
+      let newCommentsPageState: CommentsPage.State;
+      [newCommentsPageState, reaction] = CommentsPage.update(action.action, store, state.commentsPage);
+      newState = set(state, {commentsPage: newCommentsPageState});
       break;
     default:
       reaction = action;
@@ -81,7 +94,7 @@ export function view(store: Store, state: State, path: string, update: Update<Ac
         update({type: 'HOME_PAGE', action}));
     case 'TWIT_AUTH':
       const code = readParam('code');
-      api.fetchAccessToken(code, () => update({
+      twicas.fetchAccessToken(code, () => update({
         type: 'GOTO_SILENTLY',
         path: localStorage.getItem('returnToPath') as string,
       }));
@@ -89,7 +102,7 @@ export function view(store: Store, state: State, path: string, update: Update<Ac
     case 'USER':
       return UserPage.view(store.user, update);
     case 'COMMENTS':
-      return CommentsPage.view(route.args[0], store, update, state.errors);
+      return CommentsPage.view(route.args[0], store, state.commentsPage, (action: CommentsPage.Action) => update({type: 'COMMENTS_PAGE', action}), state.errors);
     default: return NotFound.view();
   }
 }
