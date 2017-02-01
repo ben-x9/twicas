@@ -8,7 +8,7 @@ const baseUrl = 'https://v20ki0pxd7.execute-api.us-west-2.amazonaws.com/supercas
 
 const unproxiedBaseUrl = 'https://apiv2.twitcasting.tv/';
 
-const clientId = 'i3233014286.638b87edc61701eb208daa6fccf363c5399e4940c1c970f34581a6346e7b6a82';
+const clientId = 'i3233014286.a592ee8f5c9f84396e7a22f67de7fcfcdcdedc344d9f5ddd0b2b60ea3a9b577b';
 const clientSecret = require('../../twicas-secret.json');
 
 const redirectUri = 'https://twicas-17f39.firebaseapp.com/twicas_auth';
