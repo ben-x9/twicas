@@ -6,7 +6,8 @@ import { VNode } from 'snabbdom/vnode';
 export function getExplanation(text: string, callback: ActionCallback<VNode[]>) {
   const cleanText = text
     .replace(/[\ud800-\udfff]/g, '')
-    .replace('_', '');
+    .replace('_', ' ')
+    .replace('\n', ' ');
   xhr.get({
     url: `https://xes56jrq8b.execute-api.us-west-2.amazonaws.com/wwwjdic/wwwjdic/cgi-data/wwwjdic?9ZIG${cleanText}`,
     responseType: 'document',
