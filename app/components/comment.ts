@@ -8,4 +8,6 @@ export const view = (comment: Comment) =>
   div(style(padding(10), {
     backgroundColor: colors.lightGray,
     borderRadius: 10,
-  }), comment.message);
+  }), {
+    key: comment.id,
+  }, comment.message);

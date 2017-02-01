@@ -4,7 +4,7 @@ import { Action as GlobalAction } from 'core/actions';
 import { style } from 'typestyle';
 import { vertical, verticallySpaced, center, content, padding } from 'csstips';
 import button from 'components/button';
-import { commentsPath } from 'root';
+import { commentsPage } from 'root';
 import * as colors from 'colors';
 
 export const state = {
@@ -30,7 +30,7 @@ export const view = (state: State, update: Update<Action>) => {
   document.body.style.backgroundColor = colors.lightGray;
   const gotoComments = () => update({
     type: 'GOTO',
-    path: commentsPath({userId: state.input}),
+    path: commentsPage({userId: state.input}),
   });
   return div(style(padding(10), vertical, verticallySpaced(10), center), [
     div(style(content), 'enter user id'),

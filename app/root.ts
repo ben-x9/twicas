@@ -57,11 +57,11 @@ export function update(action: Action, store: Store, state: State): [Store, Stat
 
 // VIEW
 
-export const homePath = path('/', 'HOME');
+export const homePage = path('/', 'HOME');
 export const twitAuthPath = path('/twit_auth', 'TWIT_AUTH');
-export const userPath = path('/user', 'USER');
+export const userPage = path('/user', 'USER');
 
-export const commentsPath: Path<{userId: string}> =
+export const commentsPage: Path<{userId: string}> =
   path('/:userId', 'COMMENTS');
 
 export function view(store: Store, state: State, path: string, update: Update<Action>) {
@@ -72,7 +72,10 @@ export function view(store: Store, state: State, path: string, update: Update<Ac
         update({type: 'HOME_PAGE', action}));
     case 'TWIT_AUTH':
       const code = readParam('code');
-      api.fetchAccessToken(code, () => update({type: 'REFRESH_VIEW'}));
+      api.fetchAccessToken(code, () => update({
+        type: 'GOTO',
+        path: localStorage.getItem('returnToPath') as string,
+      }));
       return loading();
     case 'USER':
       return UserPage.view(store.user, update);

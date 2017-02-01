@@ -5,6 +5,8 @@ import { Comment } from 'store/comment';
 
 const baseUrl = 'https://v20ki0pxd7.execute-api.us-west-2.amazonaws.com/supercast/';
 
+const unproxiedBaseUrl = 'https://apiv2.twitcasting.tv/';
+
 const clientId = 'i3233014286.94718e949c391fb9609da6976d691d2f5e650b9d478118927bea896b7c695ebc';
 const clientSecret = require('../twicas-secret.json');
 
@@ -35,12 +37,13 @@ const camelizeKeysDeep = (data: any): any =>
 const url = (path: string, queryVals?: {[param: string]: string}) =>
   baseUrl + path + (queryVals ? ('?' + queryString(queryVals)) : '');
 
-const authUrl = url('oauth2/authorize', {
+const authUrl = unproxiedBaseUrl + 'oauth2/authorize?' + queryString({
   clientId,
   responseType: 'code',
 });
 
 export const fetchAccessToken = (code: string, callback: () => void) => {
+  debugger
   post('oauth2/access_token', {
     code,
     grantType: 'authorization_code',
@@ -69,7 +72,9 @@ const get = (uri: string, args: Data, callback: Callback<any>) => {
     if (token) {
       global.accessToken = token;
     } else {
+      localStorage.setItem('returnToPath', location.pathname);
       window.location.replace(authUrl);
+      return;
     }
   }
   const query = queryString(args);
@@ -88,7 +93,10 @@ const get = (uri: string, args: Data, callback: Callback<any>) => {
 };
 
 export function getUser(id: string, callback: Callback<User>) {
-  get(`users/${id}`, {}, callback);
+  get(`users/${id}`, {}, (err: Error, data: any) =>
+    data.error ?
+      callback(new Error('no such user'), data) :
+      callback(null, data.user));
 }
 
 export function getComments(movieId: string, callback: Callback<ReadonlyArray<Comment>>) {
