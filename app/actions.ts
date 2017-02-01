@@ -35,7 +35,7 @@ export function perform(action: Action, store: Store, state: State, callback: (s
     case 'GET_CURRENT_USER':
       twicas.getCurrentUser((err, store, state, user) =>
         callback(set(store, {user}), state, null));
-      break;
+      return false;
 
     case 'SUBSCRIBE_COMMENTS':
       if (timerId !== null) clearInterval(timerId);
@@ -70,7 +70,7 @@ export function perform(action: Action, store: Store, state: State, callback: (s
 
     case 'UNSUBSCRIBE_COMMENTS':
       if (timerId !== null) clearInterval(timerId);
-      break;
+      return false;
 
     case 'GET_COMMENT_EXPLANATION':
       jdic.getExplanation(
