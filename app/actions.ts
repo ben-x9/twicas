@@ -2,7 +2,7 @@ import { Action as CoreAction } from 'core/actions';
 import * as api from 'api';
 import { Store, State } from 'root';
 import { set, stop } from 'core/common';
-import * as Root from 'root';
+import * as lo from 'lodash';
 
 export interface GetCurrentUser {
   type: 'GET_CURRENT_USER';
@@ -44,9 +44,15 @@ export function perform(action: Action, store: Store, state: State, callback: (s
         } else {
           const getComments = () =>
             api.getComments(liveId, (err, store, state, comments) =>
-              callback(set(store, {comments}), state));
+              callback(set(store, {
+              comments: lo(comments.concat(store.comments))
+                .sortBy('id')
+                .sortedUniqBy('id')
+                .value()
+                .reverse(),
+              }), state));
           getComments();
-          // timerId = setInterval(() => getComments(), 3000);
+          timerId = setInterval(() => getComments(), 3000);
         }
       });
       break;
