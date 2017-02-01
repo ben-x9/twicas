@@ -12,7 +12,7 @@ import * as CommentComponent from 'components/comment';
 
 export const view = (userId: string, store: Store, update: Update<Action>, errors: Errors) =>
     div(
-      style(padding(10), vertical, verticallySpaced(10), center),
+      style(padding(10), vertical, verticallySpaced(15), center),
       {
         key: 'comments',
         hook: {
@@ -29,12 +29,15 @@ export const view = (userId: string, store: Store, update: Update<Action>, error
         div('loading...') :
       [
         div(style(padding(10), vertical, verticallySpaced(10), center, {maxWidth: 400}), [
-          div(store.user.name),
+          img(style({borderRadius: 5}), {attrs: {src: store.user.image}}),
+          div(style({
+            color: colors.darkGray,
+            fontWeight: 'bold',
+          }), store.user.name),
           div(store.user.profile),
-          img({attrs: {src: store.user.image}}),
         ]),
         div(
-          style(vertical, verticallySpaced(10), width(300), center),
+          style(vertical, verticallySpaced(10), {maxWidth: 360}, center),
             errors.comments ?
               [div(errors.comments)] :
             store.comments.length === 0 ?
