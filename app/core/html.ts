@@ -1,9 +1,10 @@
-import { h } from 'snabbdom';
+import { h as snabH } from 'snabbdom';
 import { VNode, VNodeData } from 'snabbdom/vnode';
 import { isObject, set } from 'core/common';
 
 export type VNode = VNode;
 export type VNodeData = VNodeData;
+export const h = snabH;
 
 interface Name {
   name: string;
@@ -71,6 +72,7 @@ export const input = tag('input');
 export const img = tag('img');
 export const h1 = tag('h1');
 export const span = tag('span');
+export const br = h('br');
 
 const svgTag = (type: string) => {
   const t = tag(type);
@@ -80,3 +82,12 @@ const svgTag = (type: string) => {
 export const svg = svgTag('svg');
 export const polygon = svgTag('polygon');
 export const text = svgTag('text');
+
+const replaceWithBr = (str: string, target: string) =>
+  str.split(target).reduce(
+    (parts, part) => parts.concat([part, br]),
+    [] as (string|VNode)[],
+  ).slice(0, -1);
+
+export const newlineToBr = (str: string) => replaceWithBr(str, '\n');
+export const newlineStrToBr = (str: string) => replaceWithBr(str, '\\n');

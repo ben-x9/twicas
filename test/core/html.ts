@@ -1,4 +1,4 @@
-import { tag } from 'core/html';
+import { tag, newlineToBr, br } from 'core/html';
 import { assert } from 'chai';
 
 describe('tag', () => {
@@ -9,5 +9,18 @@ describe('tag', () => {
   it('should not set a css class when name arg is missing', () => {
     const vnode = tag('div')('hello world!');
     assert.strictEqual(vnode.sel, 'div');
+  });
+});
+
+describe('newlineToBr', () => {
+  it('should convert newline chars to br tags', () => {
+    assert.deepEqual(
+      newlineToBr('hello\nworld'),
+      ['hello', br, 'world'],
+    );
+    assert.deepEqual(
+      newlineToBr('hello\nworld\n\nhave a nice day'),
+      ['hello', br, 'world', br, '', br, 'have a nice day'],
+    );
   });
 });
