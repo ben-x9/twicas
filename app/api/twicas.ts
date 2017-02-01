@@ -11,7 +11,7 @@ const unproxiedBaseUrl = 'https://apiv2.twitcasting.tv/';
 const clientId = 'i3233014286.94718e949c391fb9609da6976d691d2f5e650b9d478118927bea896b7c695ebc';
 const clientSecret = require('../../twicas-secret.json');
 
-const redirectUri = 'http://localhost:8080/twit_auth';
+const redirectUri = 'https://twicas-17f39.firebaseapp.com/twicas_auth';
 
 interface Global extends Window {
   accessToken: string;

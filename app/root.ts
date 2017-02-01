@@ -80,7 +80,7 @@ export function update(action: Action, store: Store, state: State): [Store, Stat
 // VIEW
 
 export const homePage = path('/', 'HOME');
-export const twitAuthPath = path('/twit_auth', 'TWIT_AUTH');
+export const twitAuthPath = path('/twicas_auth', 'TWICAS_AUTH');
 export const userPage = path('/user', 'USER');
 
 export const commentsPage: Path<{userId: string}> =
@@ -92,7 +92,7 @@ export function view(store: Store, state: State, path: string, update: Update<Ac
     case 'HOME':
       return HomePage.view(state.homePage, (action: HomePage.Action) =>
         update({type: 'HOME_PAGE', action}));
-    case 'TWIT_AUTH':
+    case 'TWICAS_AUTH':
       const code = readParam('code');
       twicas.fetchAccessToken(code, () => update({
         type: 'GOTO_SILENTLY',
