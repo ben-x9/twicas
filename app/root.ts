@@ -7,27 +7,32 @@ import * as UserPage from 'pages/user';
 import * as CommentsPage from 'pages/comments';
 import { User } from 'store/user';
 import { Comment } from 'store/comment';
-import { lightGray } from 'colors';
 import loading from 'pages/loading';
 import * as api from 'api';
 
 if (module.hot) module.hot.dispose(() => {
   reset();
-  // clearTimeout(timerId);
 });
 
 // MODEL
 
-export const store = {
+export const initialStore = {
   user: null as User | null,
   comments: [] as ReadonlyArray<Comment>,
 };
-export type Store = Readonly<typeof store>;
+export type Store = Readonly<typeof initialStore>;
 
-export const state = {
+export const initialErrors = {
+  user: '',
+  comments: '',
+};
+
+export const initialState = {
+  errors: initialErrors,
   homePage: HomePage.state,
 };
-export type State = Readonly<typeof state>;
+export type State = Readonly<typeof initialState>;
+export type Errors = Readonly<typeof initialErrors>;
 
 // UPDATE
 
@@ -52,6 +57,10 @@ export function update(action: Action, store: Store, state: State): [Store, Stat
       reaction = action;
       break;
   }
+  if (reaction && reaction.type === 'GOTO') {
+    newStore = initialStore;
+    newState = set(newState, {errors: initialErrors});
+  }
   return [newStore, newState, reaction];
 };
 
@@ -73,50 +82,14 @@ export function view(store: Store, state: State, path: string, update: Update<Ac
     case 'TWIT_AUTH':
       const code = readParam('code');
       api.fetchAccessToken(code, () => update({
-        type: 'GOTO',
+        type: 'GOTO_SILENTLY',
         path: localStorage.getItem('returnToPath') as string,
       }));
       return loading();
     case 'USER':
       return UserPage.view(store.user, update);
     case 'COMMENTS':
-      return CommentsPage.view(route.args[0], store, update);
+      return CommentsPage.view(route.args[0], store, update, state.errors);
     default: return NotFound.view();
   }
 }
-
-// function loadData(store: Store, update: Update<Action>) {
-//   let loading = false;
-//   loading = loadAccessToken(() => defer(() =>
-//     update({type: 'REDIRECT', url: authUrl})));
-//   if (loading) return wait();
-//   return null;
-// };
-
-// api.verifyCredentials((err, data) => {debugger});
-
-// const id = 'c:4_shiki';
-
-// const timerId = setTimeout(() => {
-//   pollForComments(id);
-// }, 3000);
-
-// function pollForComments(id: string) {
-//   getCurrentLive(id, (err, data: any) => {
-//     getComments(data.movie.id, (err, data) => {
-//       debugger;
-//     });
-//   });
-// }
-
-
-// import * as xhr from 'xhr';
-
-// import { url, clientId, clientSecret } from '../twit-config';
-
-// xhr(`${url}oauth2/authorize?client_id=${clientId}&response_type=code`, (err, resp) => {
-//   debugger;
-//   // xhr.post(`${url}/oauth2/access_token?code=${}`, (err, resp) => {
-//   //   debugger;
-//   // });
-//  });

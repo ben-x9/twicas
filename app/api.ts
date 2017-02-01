@@ -2,6 +2,8 @@ import * as xhr from 'xhr';
 import { map, snakeCase, camelCase, mapKeys, mapValues } from 'lodash';
 import { User } from 'store/user';
 import { Comment } from 'store/comment';
+import { Store, State } from 'root';
+import { stop } from 'core/common';
 
 const baseUrl = 'https://v20ki0pxd7.execute-api.us-west-2.amazonaws.com/supercast/';
 
@@ -14,12 +16,16 @@ const redirectUri = 'http://localhost:8080/twit_auth';
 
 interface Global extends Window {
   accessToken: string;
+  // ensure callbacks always access the latest data
+  store: Store;
+  state: State;
 }
 const global = window as Global;
 
 type Data = {[key: string]: primitive};
 
 type Callback<T> = (error: Error|null, data: T) => void;
+type ActionCallback<T> = (error: Error|null, store: Store, state: State, data: T) => void;
 
 const queryString = (vals: Data) =>
   map(vals, (val, param) => `${snakeCase(param)}=${val}`).join('&');
@@ -43,7 +49,6 @@ const authUrl = unproxiedBaseUrl + 'oauth2/authorize?' + queryString({
 });
 
 export const fetchAccessToken = (code: string, callback: () => void) => {
-  debugger
   post('oauth2/access_token', {
     code,
     grantType: 'authorization_code',
@@ -92,27 +97,32 @@ const get = (uri: string, args: Data, callback: Callback<any>) => {
    });
 };
 
-export function getUser(id: string, callback: Callback<User>) {
+
+function action<T>(callback: ActionCallback<T>, err: Error | null, data: T) {
+  callback(err, global.store, global.state, data);
+};
+
+export function getUser(id: string, callback: ActionCallback<User>) {
   get(`users/${id}`, {}, (err: Error, data: any) =>
     data.error ?
-      callback(new Error('no such user'), data) :
-      callback(null, data.user));
+      action(callback, new Error('no such user'), data) :
+      action(callback, null, data.user));
 }
 
-export function getComments(movieId: string, callback: Callback<ReadonlyArray<Comment>>) {
+export function getComments(movieId: string, callback: ActionCallback<ReadonlyArray<Comment>>) {
   get(`movies/${movieId}/comments?offset=0&limit=10`, {},
-    (err: Error, data: any) => !err && callback(null, data.comments),
+    (err: Error, data: any) => !err && action(callback, null, data.comments),
   );
 }
 
-export function getCurrentLiveId(userId: string, callback: Callback<string>) {
+export function getCurrentLiveId(userId: string, callback: ActionCallback<string>) {
   get(`users/${userId}/current_live`, {}, (err: Error, data: any) =>
     data.error ?
-      callback(new Error('that user is not live'), '') :
-      callback(null, data.movie.id));
+      action(callback, new Error('this user is not live'), '') :
+      action(callback, null, data.movie.id));
 }
 
-export function getCurrentUser(callback: Callback<User>) {
+export function getCurrentUser(callback: ActionCallback<User>) {
   get(`verify_credentials`, {}, (err: Error, data: any) =>
-    callback(err, data.user as User));
+    action(callback, err, data.user as User));
 }

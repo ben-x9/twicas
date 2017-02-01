@@ -22,29 +22,32 @@ export type Action = CoreAction | GetCurrentUser | SubscribeComments | Unsubscri
 
 let timerId: number | null = null;
 
-interface Global extends Window {
-  // read the global store and state in callbacks to stay up to date
-  store: Root.Store;
-  state: Root.State;
-}
-const global = window as Global;
-
-export function perform(action: Action, store: Store, state: State, callback: (store: Store, state: State, action: Action|null) => void) {
+export function perform(action: Action, store: Store, state: State, callback: (store: Store, state: State, action?: Action|null) => void) {
   switch (action.type) {
     case 'GET_CURRENT_USER':
-      api.getCurrentUser((err, user) =>
+      api.getCurrentUser((err, store, state, user) =>
         callback(set(store, {user}), state, null));
       break;
     case 'SUBSCRIBE_COMMENTS':
       if (timerId !== null) clearInterval(timerId);
-      api.getUser(action.userId, (err, user) =>
-        !err && callback(set(global.store, {user}), state, null));
-      api.getCurrentLiveId(action.userId, (err, liveId) => {
-        if (err) { debugger };
-        const getComments = () => api.getComments(liveId, (err, comments) =>
-          callback(set(global.store, {comments}), state, null));
-        getComments();
-        // timerId = setInterval(() => getComments(), 3000);
+      api.getUser(action.userId, (err, store, state, user) =>
+        err ?
+          callback(store, set(state, {
+            errors: set(state.errors, {user: err.message}),
+          })) :
+          callback(set(store, {user}), state));
+      api.getCurrentLiveId(action.userId, (err, store, state, liveId) => {
+        if (err) {
+          callback(store, set(state, {
+            errors: set(state.errors, {comments: err.message}),
+          }));
+        } else {
+          const getComments = () =>
+            api.getComments(liveId, (err, store, state, comments) =>
+              callback(set(store, {comments}), state));
+          getComments();
+          // timerId = setInterval(() => getComments(), 3000);
+        }
       });
       break;
     case 'UNSUBSCRIBE_COMMENTS':

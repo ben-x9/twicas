@@ -59,8 +59,8 @@ type Action = Root.Action | GoBack;
 import { create } from 'jsondiffpatch';
 const json = create();
 
-if (!global.store) global.store = Root.store;
-if (!global.state) global.state = Root.state;
+if (!global.store) global.store = Root.initialStore;
+if (!global.state) global.state = Root.initialState;
 
 function update(action: Action) {
   const [newData, newState, reaction] =
@@ -72,13 +72,13 @@ function update(action: Action) {
   applyUpdate(action, newData, newState, reaction);
 }
 
-function applyUpdate(action: Action, newData: Root.Store, newState: Root.State, reaction: Actions.Action|null) {
+function applyUpdate(action: Action, newStore: Root.Store, newState: Root.State, reaction?: Actions.Action|null) {
   if (process.env.NODE_ENV === 'development')
-    logAction(action, newData, newState, reaction);
-  const shouldRefresh = newData !== global.store || newState !== global.state;
+    logAction(action, newStore, newState, reaction);
+  const shouldRefresh = newStore !== global.store || newState !== global.state;
   if (action.type !== 'POP' && newState !== global.state)
     history.replace(history.location.pathname, newState);
-  global.store = newData;
+  global.store = newStore;
   global.state = newState;
   if (reaction) {
     perform(reaction);
@@ -94,6 +94,10 @@ function perform(action: Actions.Action) {
       history.push(action.path, global.state);
       refreshView();
       break;
+    case 'GOTO_SILENTLY':
+      history.replace(action.path, global.state);
+      refreshView();
+      break;
     case 'REDIRECT':
       window.location.replace(action.url);
       break;
@@ -107,7 +111,7 @@ function perform(action: Actions.Action) {
   }
 }
 
-function logAction(action: Action, store: Root.Store, state: Root.State, reaction: Actions.Action|null) {
+function logAction(action: Action, store: Root.Store, state: Root.State, reaction?: Actions.Action|null) {
   let actionPath = action.type;
   let actualAction: any = action;
   while (actualAction.action) {
